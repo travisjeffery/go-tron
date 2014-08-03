@@ -50,7 +50,7 @@ func installLaunchAgent() {
 		log.Fatal(err)
 	}
 
-	p := fmt.Sprintf("%s/Library/LaunchAgents/%s", user.HomeDir, label)
+	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", label)
 
 	if _, err := os.Stat(p); err == nil {
 		cmd.New(fmt.Sprintf("launchtl unload \"%s\"", p)).Exec()
