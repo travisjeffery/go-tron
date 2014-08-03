@@ -79,3 +79,11 @@ func installLaunchAgent() {
 
 	println("tron is installed and will report daily.")
 }
+
+func currentUser() *user.User {
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return user
+}
