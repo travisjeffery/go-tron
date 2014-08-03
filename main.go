@@ -63,16 +63,11 @@ func installLaunchAgent() {
 	}
 
 	encoder := plist.NewEncoder(f)
-	encoder.Encode(map[string]string{
+	encoder.Encode(map[string]interface{}{
 		"Label":             label,
 		"StandardOutPath":   "",
 		"StandardErrorPath": "",
-	})
-	encoder.Encode(map[string][]string{
-		// tron needs to be the path to the tron executable here
-		"ProgramArguments": []string{"tron", "report"},
-	})
-	encoder.Encode(map[string]map[string]int{
+		"ProgramArguments":  []string{"tron", "report"},
 		"StartCalendarInterval": map[string]int{
 			"Hour":   15,
 			"Minute": 0,
