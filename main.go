@@ -7,6 +7,7 @@ import "github.com/travisjeffery/tron/cmd"
 import "github.com/DHowett/go-plist"
 import "fmt"
 import "log"
+import "os/user"
 
 var debug = Debug("tron")
 
@@ -43,7 +44,13 @@ func main() {
 
 func installLaunchAgent() {
 	label := "com.travisjeffery.tron"
-	p := fmt.Sprintf("$HOME/Library/LaunchAgents/%s", label)
+	user, err := user.Current()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	p := fmt.Sprintf("%s/Library/LaunchAgents/%s", user.HomeDir, label)
 
 	if _, err := os.Stat(p); err != nil {
 		cmd.New(fmt.Sprintf("launchtl unload \"%s\"", p)).Exec()
