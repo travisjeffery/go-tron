@@ -13,7 +13,7 @@ type Cmd struct {
 }
 
 func (cmd Cmd) String() string {
-	return fmt.Sprintf("%s %s", cmd.Name, strings.Join(cmd.ARgs, " "))
+	return fmt.Sprintf("%s %s", cmd.Name, strings.Join(cmd.Args, " "))
 }
 
 func (cmd *Cmd) WithArg(arg string) *Cmd {
@@ -23,20 +23,20 @@ func (cmd *Cmd) WithArg(arg string) *Cmd {
 	return cmd
 }
 
-func (cmd *Cmd) WithArgs(arg ...string) *Cmd {
-	for _, args := range args {
+func (cmd *Cmd) WithArgs(args ...string) *Cmd {
+	for _, arg := range args {
 		cmd.WithArg(arg)
 	}
 	return cmd
 }
 
-func (cmd *Cmd) ExecOutput(string, error) {
+func (cmd *Cmd) ExecOutput() (string, error) {
 	output, err := exec.Command(cmd.Name, cmd.Args...).CombinedOutput()
 	return string(output), err
 }
 
 func (cmd *Cmd) Exec() error {
-	binary, lookErr = exec.LookPath(cmd.Name)
+	binary, lookErr := exec.LookPath(cmd.Name)
 	if lookErr != nil {
 		return fmt.Errorf("command not found: %s", cmd.Name)
 	}
