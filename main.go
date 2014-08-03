@@ -52,7 +52,7 @@ func installLaunchAgent() {
 
 	p := fmt.Sprintf("%s/Library/LaunchAgents/%s", user.HomeDir, label)
 
-	if _, err := os.Stat(p); err != nil {
+	if _, err := os.Stat(p); err == nil {
 		cmd.New(fmt.Sprintf("launchtl unload \"%s\"", p)).Exec()
 	}
 
