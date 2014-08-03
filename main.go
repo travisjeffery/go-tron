@@ -87,3 +87,7 @@ func currentUser() *user.User {
 	}
 	return user
 }
+
+func tronDir() string {
+	return filepath.Join(currentUser().HomeDir, ".tron")
+}
