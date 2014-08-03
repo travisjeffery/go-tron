@@ -8,6 +8,10 @@ import "github.com/DHowett/go-plist"
 import "fmt"
 import "log"
 import "os/user"
+import "io/ioutil"
+import "path/filepath"
+
+const reportsGitURL = "reports_git_url"
 
 var debug = Debug("tron")
 
@@ -20,14 +24,15 @@ func main() {
 			Name:  "report",
 			Usage: "Pulls, runs checks, and pushes results to GitHub",
 			Action: func(c *cli.Context) {
-
+				debug("tron report")
+				initReport()
 			},
 		},
 		{
 			Name:  "pull",
 			Usage: "Pulls the latest reported results from GitHub",
 			Action: func(c *cli.Context) {
-
+				debug("tron pull")
 			},
 		},
 		{
@@ -42,13 +47,33 @@ func main() {
 	app.Run(os.Args)
 }
 
-func installLaunchAgent() {
-	label := "com.travisjeffery.tron"
-	user, err := user.Current()
+func initReport() {
+	p := filepath.Join(currentUser().HomeDir, ".tron", reportsGitURL)
+
+	if _, err := os.Stat(p); err != nil {
+		log.Fatal(fmt.Sprintf("tron needs a git url in ~/.tron/%s", reportsGitURL))
+	}
+
+	url, err := ioutil.ReadFile(p)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	reportsDir := filepath.Join(tronDir(), "reports")
+
+	if _, err := os.Stat(reportsDir); err == nil {
+		debug("resetting reports")
+		os.Chdir(reportsDir)
+		cmd.New("git").WithArgs("reset", "--hard", "origin/master").Exec()
+	} else {
+		debug("cloning reports")
+		cmd.New("git").WithArgs("clone", "-q", string(url), reportsDir).Exec()
+	}
+}
+
+func installLaunchAgent() {
+	label := "com.travisjeffery.tron"
 
 	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", label)
 
