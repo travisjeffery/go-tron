@@ -10,6 +10,8 @@ import "log"
 import "os/user"
 import "io/ioutil"
 import "path/filepath"
+import "encoding/json"
+import "time"
 
 const reportsGitURL = "reports_git_url"
 
@@ -30,6 +32,7 @@ func main() {
 				pullReports()
 				initReport()
 				recordReport()
+				pushReports()
 			},
 		},
 		{
@@ -56,6 +59,12 @@ func pullReports() {
 	cmd.New("git").WithArgs("pull", "-v").Exec()
 }
 
+func pushReports() {
+	os.Chdir(reportsDir())
+	// TODO: will probably want to add retries in here
+	cmd.New("git").WithArgs("pull", "--rebase").Exec()
+	cmd.New("git").WithArgs("pull", "--push").Exec()
+}
 
 func recordReport() {
 	total, failures := runChecks()
