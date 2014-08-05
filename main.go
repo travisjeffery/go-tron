@@ -88,8 +88,10 @@ func recordReport() {
 	os.Chdir(reportsDir())
 	cmd.New("git").WithArgs("pull", "--rebase")
 
+	summary := fmt.Sprintf("%s %s: %d checks, %d failures", status, id, total, failures)
+
 	d := map[string]interface{}{
-		"summary": fmt.Sprintf("%s %s: %d checks, %d failures", status, id, total, failures),
+		"summary": summary,
 		"date":    fmt.Sprintf("%s", time.Now()),
 		"checks": map[string][]string{
 			"successes": []string{"check that travis is cool successful obv"},
@@ -106,6 +108,9 @@ func recordReport() {
 	}
 
 	json.NewEncoder(f).Encode(d)
+
+	cmd.New("git").WithArgs("add", id).Exec()
+	cmd.New("git").WithArgs("commit", "-m", summary).Exec()
 }
 
 func initReport() {
