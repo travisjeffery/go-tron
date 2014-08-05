@@ -40,6 +40,7 @@ func main() {
 			Usage: "Pulls the latest reported results from GitHub",
 			Action: func(c *cli.Context) {
 				debug("tron pull")
+				pullReports()
 			},
 		},
 		{
