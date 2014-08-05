@@ -25,6 +25,9 @@ func main() {
 			Usage: "Pulls, runs checks, and pushes results to GitHub",
 			Action: func(c *cli.Context) {
 				debug("tron report")
+				// TODO: check for updates to tron and get new checks
+				// pull reports
+				pullReports()
 				initReport()
 			},
 		},
@@ -45,6 +48,11 @@ func main() {
 		},
 	}
 	app.Run(os.Args)
+}
+
+func pullReports() {
+	os.Chdir(reportsDir())
+	cmd.New("git").WithArgs("pull", "-v").Exec()
 }
 
 func initReport() {
