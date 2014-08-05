@@ -112,16 +112,18 @@ func initReport() {
 		log.Fatal(err)
 	}
 
-	reportsDir := filepath.Join(tronDir(), "reports")
-
-	if _, err := os.Stat(reportsDir); err == nil {
+	if _, err := os.Stat(reportsDir()); err == nil {
 		debug("resetting reports")
-		os.Chdir(reportsDir)
+		os.Chdir(reportsDir())
 		cmd.New("git").WithArgs("reset", "--hard", "origin/master").Exec()
 	} else {
 		debug("cloning reports")
-		cmd.New("git").WithArgs("clone", "-q", string(url), reportsDir).Exec()
+		cmd.New("git").WithArgs("clone", "-q", string(url), reportsDir()).Exec()
 	}
+}
+
+func reportsDir() string {
+	return filepath.Join(tronDir(), "reports")
 }
 
 func installLaunchAgent() {
