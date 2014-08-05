@@ -29,6 +29,7 @@ func main() {
 				// pull reports
 				pullReports()
 				initReport()
+				recordReport()
 			},
 		},
 		{
@@ -53,6 +54,49 @@ func main() {
 func pullReports() {
 	os.Chdir(reportsDir())
 	cmd.New("git").WithArgs("pull", "-v").Exec()
+}
+
+
+func recordReport() {
+	total, failures := runChecks()
+
+	var status string
+
+	if failures == 0 {
+		status = ":white_check_mark:"
+	} else {
+		status = ":warning:"
+	}
+
+	hostname, err := os.Hostname()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	id := fmt.Sprintf("%s@%s", currentUser().Username, hostname)
+
+	os.Chdir(reportsDir())
+	cmd.New("git").WithArgs("pull", "--rebase")
+
+	d := map[string]interface{}{
+		"summary": fmt.Sprintf("%s %s: %d checks, %d failures", status, id, total, failures),
+		"date":    fmt.Sprintf("%s", time.Now()),
+		"checks": map[string][]string{
+			"successes": []string{"check that travis is cool successful obv"},
+			"failures":  []string{},
+		},
+	}
+
+	p := filepath.Join(reportsDir(), id)
+
+	f, err := os.Create(p)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	json.NewEncoder(f).Encode(d)
 }
 
 func initReport() {
@@ -111,6 +155,10 @@ func installLaunchAgent() {
 	cmd.New(fmt.Sprintf("launchtl start \"%s\"", p)).Exec()
 
 	println("tron is installed and will report daily.")
+}
+
+func runChecks() (total int, failures int) {
+	return 10, 0
 }
 
 func currentUser() *user.User {
