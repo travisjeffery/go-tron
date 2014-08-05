@@ -4,6 +4,7 @@ import "os"
 import . "github.com/visionmedia/go-debug"
 import "github.com/codegangsta/cli"
 import "github.com/travisjeffery/tron/cmd"
+import "github.com/travisjeffery/tron/checks"
 import "github.com/DHowett/go-plist"
 import "fmt"
 import "log"
@@ -18,7 +19,6 @@ const reportsGitURL = "reports_git_url"
 var debug = Debug("tron")
 
 func main() {
-
 	app := cli.NewApp()
 	app.Name = "tron"
 	app.Commands = []cli.Command{
@@ -68,16 +68,6 @@ func pushReports() {
 }
 
 func recordReport() {
-	total, failures := runChecks()
-
-	var status string
-
-	if failures == 0 {
-		status = ":white_check_mark:"
-	} else {
-		status = ":warning:"
-	}
-
 	hostname, err := os.Hostname()
 
 	if err != nil {
@@ -89,14 +79,26 @@ func recordReport() {
 	os.Chdir(reportsDir())
 	cmd.New("git").WithArgs("pull", "--rebase")
 
-	summary := fmt.Sprintf("%s %s: %d checks, %d failures", status, id, total, failures)
+	successes, failures := checks.Runner.Run()
+	failuresCount := len(failures)
+	totalCount := len(successes) + failuresCount
+
+	var status string
+
+	if failuresCount == 0 {
+		status = ":white_check_mark:"
+	} else {
+		status = ":warning:"
+	}
+
+	summary := fmt.Sprintf("%s %s: %d checks, %d failures", status, id, totalCount, failuresCount)
 
 	d := map[string]interface{}{
 		"summary": summary,
 		"date":    fmt.Sprintf("%s", time.Now()),
 		"checks": map[string][]string{
-			"successes": []string{"check that travis is cool successful obv"},
-			"failures":  []string{},
+			"successes": successes,
+			"failures":  failures,
 		},
 	}
 
@@ -172,10 +174,6 @@ func installLaunchAgent() {
 	cmd.New(fmt.Sprintf("launchtl start \"%s\"", p)).Exec()
 
 	println("tron is installed and will report daily.")
-}
-
-func runChecks() (total int, failures int) {
-	return 10, 0
 }
 
 func currentUser() *user.User {
