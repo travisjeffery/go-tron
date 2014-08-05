@@ -63,7 +63,7 @@ func pushReports() {
 	os.Chdir(reportsDir())
 	// TODO: will probably want to add retries in here
 	cmd.New("git").WithArgs("pull", "--rebase").Exec()
-	cmd.New("git").WithArgs("pull", "--push").Exec()
+	cmd.New("git").WithArgs("push").Exec()
 }
 
 func recordReport() {
