@@ -5,6 +5,7 @@ import "os/exec"
 import "strings"
 import "github.com/kballard/go-shellquote"
 import "log"
+import "os"
 
 type Cmd struct {
 	Name string
@@ -40,6 +41,9 @@ func (cmd *Cmd) Exec() error {
 		return fmt.Errorf("command not found: %s", cmd.Name)
 	}
 	c := exec.Command(binary, cmd.Args...)
+	c.Stdin = os.Stdin
+	c.Stderr = os.Stderr
+	c.Stdout = os.Stdout
 	return c.Run()
 }
 
