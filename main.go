@@ -165,14 +165,10 @@ func installLaunchAgent() {
 		log.Fatal(err)
 	}
 
-	log := filepath.Join(tronDir(), "log")
-
 	encoder := plist.NewEncoder(f)
 	encoder.Encode(map[string]interface{}{
-		"Label":             label,
-		"StandardOutPath":   log,
-		"StandardErrorPath": log,
-		"ProgramArguments":  []string{execPath, "report"},
+		"Label":            label,
+		"ProgramArguments": []string{execPath, "report"},
 		"StartCalendarInterval": map[string]int{
 			"Hour":   15,
 			"Minute": 0,
