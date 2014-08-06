@@ -58,14 +58,14 @@ func main() {
 
 func pullReports() {
 	os.Chdir(reportsDir())
-	cmd.New("git").WithArgs("pull", "-v").Exec()
+	cmd.New("git pull -v").Exec()
 }
 
 func pushReports() {
 	os.Chdir(reportsDir())
 	// TODO: will probably want to add retries in here
-	cmd.New("git").WithArgs("pull", "--rebase").Exec()
-	cmd.New("git").WithArgs("push").Exec()
+	cmd.New("git pull --rebase").Exec()
+	cmd.New("git push").Exec()
 }
 
 func recordReport() {
@@ -78,7 +78,7 @@ func recordReport() {
 	id := fmt.Sprintf("%s@%s", currentUser().Username, hostname)
 
 	os.Chdir(reportsDir())
-	cmd.New("git").WithArgs("pull", "--rebase")
+	cmd.New("git pull --rebase").Exec()
 
 	successes, failures := Checklist.Run()
 	failuresCount := len(failures)
@@ -113,8 +113,8 @@ func recordReport() {
 
 	json.NewEncoder(f).Encode(d)
 
-	cmd.New("git").WithArgs("add", id).Exec()
-	cmd.New("git").WithArgs("commit", "-m", summary).Exec()
+	cmd.New("git add").WithArg(id).Exec()
+	cmd.New("git commit -m").WithArg(summary).Exec()
 }
 
 func initReport() {
@@ -133,10 +133,10 @@ func initReport() {
 	if _, err := os.Stat(reportsDir()); err == nil {
 		debug("resetting reports")
 		os.Chdir(reportsDir())
-		cmd.New("git").WithArgs("reset", "--hard", "origin/master").Exec()
+		cmd.New("git reset --hard origin/master").Exec()
 	} else {
 		debug("cloning reports")
-		cmd.New("git").WithArgs("clone", "-q", string(url), reportsDir()).Exec()
+		cmd.New("git clone -q").WithArgs(string(url), reportsDir()).Exec()
 	}
 }
 
@@ -150,7 +150,7 @@ func installLaunchAgent() {
 	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", label)
 
 	if _, err := os.Stat(p); err == nil {
-		cmd.New(fmt.Sprintf("launchtl unload \"%s\"", p)).Exec()
+		cmd.New("launchtl unload").WithArg(p).Exec()
 	}
 
 	f, err := os.Create(p)
@@ -177,8 +177,8 @@ func installLaunchAgent() {
 		},
 	})
 
-	cmd.New(fmt.Sprintf("launchtl load \"%s\"", p)).Exec()
-	cmd.New(fmt.Sprintf("launchtl start \"%s\"", p)).Exec()
+	cmd.New("launchtl load").WithArg(p).Exec()
+	cmd.New("launchtl start").WithArg(p).Exec()
 
 	println("tron is installed and will report daily.")
 }
