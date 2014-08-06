@@ -13,6 +13,7 @@ import "io/ioutil"
 import "path/filepath"
 import "encoding/json"
 import "time"
+import "bitbucket.org/kardianos/osext"
 
 const reportsGitURL = "reports_git_url"
 
@@ -158,12 +159,18 @@ func installLaunchAgent() {
 		log.Fatal(err)
 	}
 
+	execPath, err := osext.Executable()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	encoder := plist.NewEncoder(f)
 	encoder.Encode(map[string]interface{}{
 		"Label":             label,
 		"StandardOutPath":   "",
 		"StandardErrorPath": "",
-		"ProgramArguments":  []string{"tron", "report"},
+		"ProgramArguments":  []string{execPath, "report"},
 		"StartCalendarInterval": map[string]int{
 			"Hour":   15,
 			"Minute": 0,
