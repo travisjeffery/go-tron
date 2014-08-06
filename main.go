@@ -91,7 +91,7 @@ func recordReport() {
 		status = ":warning:"
 	}
 
-	summary := fmt.Sprintf("%s %s: %d checks, %d failures", status, id, totalCount, failuresCount)
+	summary := fmt.Sprintf("%s %s: %d tests, %d failures", status, id, totalCount, failuresCount)
 
 	d := map[string]interface{}{
 		"summary": summary,
