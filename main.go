@@ -179,8 +179,8 @@ func installLaunchAgent() {
 		},
 	})
 
-	cmd.New("launchtl load").WithArg(p).Exec()
-	cmd.New("launchtl start").WithArg(label).Exec()
+	cmd.New("launchctl load").WithArg(p).Exec()
+	cmd.New("launchctl start").WithArg(label).Exec()
 
 	println("tron is installed and will report daily.")
 }
