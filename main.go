@@ -150,7 +150,7 @@ func installLaunchAgent() {
 	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", fmt.Sprintf("%s.plist", label))
 
 	if _, err := os.Stat(p); err == nil {
-		cmd.New("launchtl unload").WithArg(p).Exec()
+		cmd.New("launchctl unload").WithArg(p).Exec()
 	}
 
 	f, err := os.Create(p)
