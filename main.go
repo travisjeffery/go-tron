@@ -147,7 +147,7 @@ func reportsDir() string {
 func installLaunchAgent() {
 	label := "com.travisjeffery.tron"
 
-	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", label)
+	p := filepath.Join(currentUser().HomeDir, "Library", "LaunchAgents", fmt.Sprintf("%s.plist", label))
 
 	if _, err := os.Stat(p); err == nil {
 		cmd.New("launchtl unload").WithArg(p).Exec()
@@ -165,11 +165,13 @@ func installLaunchAgent() {
 		log.Fatal(err)
 	}
 
+	log := filepath.Join(tronDir(), "log")
+
 	encoder := plist.NewEncoder(f)
 	encoder.Encode(map[string]interface{}{
 		"Label":             label,
-		"StandardOutPath":   "",
-		"StandardErrorPath": "",
+		"StandardOutPath":   log,
+		"StandardErrorPath": log,
 		"ProgramArguments":  []string{execPath, "report"},
 		"StartCalendarInterval": map[string]int{
 			"Hour":   15,
@@ -178,7 +180,7 @@ func installLaunchAgent() {
 	})
 
 	cmd.New("launchtl load").WithArg(p).Exec()
-	cmd.New("launchtl start").WithArg(p).Exec()
+	cmd.New("launchtl start").WithArg(label).Exec()
 
 	println("tron is installed and will report daily.")
 }
