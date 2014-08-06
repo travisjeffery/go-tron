@@ -4,7 +4,7 @@ import "os"
 import . "github.com/visionmedia/go-debug"
 import "github.com/codegangsta/cli"
 import "github.com/travisjeffery/tron/cmd"
-import "github.com/travisjeffery/tron/checks"
+import . "github.com/travisjeffery/tron/checklist"
 import "github.com/DHowett/go-plist"
 import "fmt"
 import "log"
@@ -25,10 +25,10 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "report",
-			Usage: "Pulls, runs checks, and pushes results to GitHub",
+			Usage: "Pulls, runs checklist, and pushes results to GitHub",
 			Action: func(c *cli.Context) {
 				debug("tron report")
-				// TODO: check for updates to tron and get new checks
+				// TODO: check for updates to tron and get the latest checklist
 				// pull reports
 				pullReports()
 				initReport()
@@ -80,7 +80,7 @@ func recordReport() {
 	os.Chdir(reportsDir())
 	cmd.New("git").WithArgs("pull", "--rebase")
 
-	successes, failures := checks.Runner.Run()
+	successes, failures := Checklist.Run()
 	failuresCount := len(failures)
 	totalCount := len(successes) + failuresCount
 
@@ -97,7 +97,7 @@ func recordReport() {
 	d := map[string]interface{}{
 		"summary": summary,
 		"date":    fmt.Sprintf("%s", time.Now()),
-		"checks": map[string][]string{
+		"tests": map[string][]string{
 			"successes": successes,
 			"failures":  failures,
 		},
