@@ -41,9 +41,9 @@ func (cmd *Cmd) Exec() error {
 		return fmt.Errorf("command not found: %s", cmd.Name)
 	}
 	c := exec.Command(binary, cmd.Args...)
-	c.Stdin = os.Stdin
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
+	c.Stdin = Stdin
+	c.Stderr = Stderr
+	c.Stdout = Stdout
 	return c.Run()
 }
 
@@ -63,3 +63,7 @@ func New(cmd string) *Cmd {
 func NewWithArray(cmd []string) *Cmd {
 	return &Cmd{Name: cmd[0], Args: cmd[1:]}
 }
+
+var Stdout = os.Stdout
+var Stderr = os.Stderr
+var Stdin = os.Stdin
