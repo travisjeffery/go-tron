@@ -1,7 +1,6 @@
 package cmd
 
 import "fmt"
-import "os"
 import "os/exec"
 import "strings"
 import "github.com/kballard/go-shellquote"
@@ -41,9 +40,6 @@ func (cmd *Cmd) Exec() error {
 		return fmt.Errorf("command not found: %s", cmd.Name)
 	}
 	c := exec.Command(binary, cmd.Args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
 	return c.Run()
 }
 
