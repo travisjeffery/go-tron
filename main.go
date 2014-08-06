@@ -37,6 +37,17 @@ func main() {
 			},
 		},
 		{
+			Name:  "run",
+			Usage: "Runs checklists",
+			Action: func(c *cli.Context) {
+				debug("tron run")
+				cmd.Stdout = nil
+				cmd.Stderr = nil
+				cmd.Stdin = nil
+				run()
+			},
+		},
+		{
 			Name:  "pull",
 			Usage: "Pulls the latest reported results from GitHub",
 			Action: func(c *cli.Context) {
@@ -80,7 +91,7 @@ func recordReport() {
 	os.Chdir(reportsDir())
 	cmd.New("git pull --rebase").Exec()
 
-	successes, failures := Checklist.Run()
+	successes, failures := run()
 	failuresCount := len(failures)
 	totalCount := len(successes) + failuresCount
 
@@ -115,6 +126,10 @@ func recordReport() {
 
 	cmd.New("git add").WithArg(id).Exec()
 	cmd.New("git commit -m").WithArg(summary).Exec()
+}
+
+func run() ([]string, []string) {
+	return Checklist.Run()
 }
 
 func initReport() {
