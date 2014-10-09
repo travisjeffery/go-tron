@@ -15,57 +15,7 @@ import "encoding/json"
 import "time"
 import "bitbucket.org/kardianos/osext"
 
-const reportsGitURL = "reports_git_url"
-
 var debug = Debug("tron")
-
-func main() {
-	app := cli.NewApp()
-	app.Name = "tron"
-	app.Commands = []cli.Command{
-		{
-			Name:  "report",
-			Usage: "Pulls, runs checklist, and pushes results to GitHub",
-			Action: func(c *cli.Context) {
-				debug("tron report")
-				// TODO: check for updates to tron and get the latest checklist
-				// pull reports
-				pullReports()
-				initReport()
-				recordReport()
-				pushReports()
-			},
-		},
-		{
-			Name:  "run",
-			Usage: "Runs checklists",
-			Action: func(c *cli.Context) {
-				debug("tron run")
-				cmd.Stdout = nil
-				cmd.Stderr = nil
-				cmd.Stdin = nil
-				run()
-			},
-		},
-		{
-			Name:  "pull",
-			Usage: "Pulls the latest reported results from GitHub",
-			Action: func(c *cli.Context) {
-				debug("tron pull")
-				pullReports()
-			},
-		},
-		{
-			Name:  "install",
-			Usage: "Schedules tron to report daily",
-			Action: func(c *cli.Context) {
-				debug("tron install")
-				installLaunchAgent()
-			},
-		},
-	}
-	app.Run(os.Args)
-}
 
 func pullReports() {
 	os.Chdir(reportsDir())
@@ -74,7 +24,6 @@ func pullReports() {
 
 func pushReports() {
 	os.Chdir(reportsDir())
-	// TODO: will probably want to add retries in here
 	cmd.New("git pull --rebase").Exec()
 	cmd.New("git push").Exec()
 }
@@ -86,7 +35,7 @@ func recordReport() {
 		log.Fatal(err)
 	}
 
-	id := fmt.Sprintf("%s@%s", currentUser().Username, hostname)
+	userId := fmt.Sprintf("%s@%s", currentUser().Username, hostname)
 
 	os.Chdir(reportsDir())
 	cmd.New("git pull --rebase").Exec()
@@ -103,7 +52,7 @@ func recordReport() {
 		status = ":warning:"
 	}
 
-	summary := fmt.Sprintf("%s %s: %d tests, %d failures", status, id, totalCount, failuresCount)
+	summary := fmt.Sprintf("%s %s - %d tests, %d failures", status, userId, totalCount, failuresCount)
 
 	d := map[string]interface{}{
 		"summary": summary,
@@ -114,7 +63,7 @@ func recordReport() {
 		},
 	}
 
-	p := filepath.Join(reportsDir(), id)
+	p := filepath.Join(reportsDir(), userId)
 
 	f, err := os.Create(p)
 
@@ -124,7 +73,7 @@ func recordReport() {
 
 	json.NewEncoder(f).Encode(d)
 
-	cmd.New("git add").WithArg(id).Exec()
+	cmd.New("git add").WithArg(userId).Exec()
 	cmd.New("git commit -m").WithArg(summary).Exec()
 }
 
@@ -133,10 +82,10 @@ func run() ([]string, []string) {
 }
 
 func initReport() {
-	p := filepath.Join(currentUser().HomeDir, ".tron", reportsGitURL)
+	p := filepath.Join(currentUser().HomeDir, ".tron", "reports_git_url")
 
 	if _, err := os.Stat(p); err != nil {
-		log.Fatal(fmt.Sprintf("tron needs a git url in ~/.tron/%s", reportsGitURL))
+		log.Fatal(fmt.Sprintf("tron needs a git url in ~/.tron/%s", "reports_git_url"))
 	}
 
 	url, err := ioutil.ReadFile(p)
@@ -206,4 +155,50 @@ func currentUser() *user.User {
 
 func tronDir() string {
 	return filepath.Join(currentUser().HomeDir, ".tron")
+}
+
+func main() {
+	app := cli.NewApp()
+	app.Name = "tron"
+	app.Commands = []cli.Command{
+		{
+			Name:  "report",
+			Usage: "Pulls, runs checklist, and pushes results to GitHub",
+			Action: func(c *cli.Context) {
+				debug("tron report")
+				pullReports()
+				initReport()
+				recordReport()
+				pushReports()
+			},
+		},
+		{
+			Name:  "run",
+			Usage: "Runs checklists",
+			Action: func(c *cli.Context) {
+				debug("tron run")
+				cmd.Stdout = nil
+				cmd.Stderr = nil
+				cmd.Stdin = nil
+				run()
+			},
+		},
+		{
+			Name:  "pull",
+			Usage: "Pulls the latest reported results from GitHub",
+			Action: func(c *cli.Context) {
+				debug("tron pull")
+				pullReports()
+			},
+		},
+		{
+			Name:  "install",
+			Usage: "Schedules tron to report daily",
+			Action: func(c *cli.Context) {
+				debug("tron install")
+				installLaunchAgent()
+			},
+		},
+	}
+	app.Run(os.Args)
 }
