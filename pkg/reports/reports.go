@@ -14,6 +14,7 @@ import "time"
 import "bitbucket.org/kardianos/osext"
 import "github.com/Merovius/go-tap"
 import "bytes"
+import "io"
 
 // import "bufio"
 
@@ -94,32 +95,28 @@ func (r *Reports) record() {
 func (r *Reports) Run() (successes []string, failures []string) {
 	debug("run")
 
-	// execPath, err := osext.Executable()
+	execPath, err := osext.Executable()
+	CheckErr(err)
+	dir := filepath.Dir(execPath)
+	find := cmd.NewWithArray([]string{"find", "-L", "-s", filepath.Join(dir, "etc/checklists"), "-type", "f", "-name", "*.bats", "-print0"})
+	xargs := cmd.NewWithArray([]string{"xargs", "-0", filepath.Join(dir, "vendor/bats/bin/bats")})
 
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// arr := []string{"find", "-L", "-s", filepath.Join(execPath, "etc/checklists"), "-type", "f", "-name", "*.bats", "-print0"}
-
-	arr := []string{"find", "-L", "-s", "/Users/tj/dev/go/src/github.com/travisjeffery/tron/etc/checklists", "-type", "f", "-name", "*.bats", "-print0"}
-
-	find := cmd.NewWithArray(arr)
-	xargs := cmd.NewWithArray([]string{"xargs", "-0", "/Users/tj/dev/go/src/github.com/travisjeffery/tron/vendor/bats/bin/bats", "--pretty"})
 	findOut, err := find.Cmd.StdoutPipe()
+	CheckErr(err)
+
 	find.Cmd.Start()
 	xargs.Cmd.Stdin = findOut
+	xargsOut, err := xargs.Cmd.StdoutPipe()
+	CheckErr(err)
 
-	xargsOutput, err := xargs.Cmd.Output()
-	fmt.Println(string(xargsOutput))
-	fmt.Println(err)
-	// b := cmd.New(filepath.Join(execPath, "vendor/bats/bin/bats"))
+	xargs.Cmd.Start()
 
-	var batsout bytes.Buffer
+	xargsBuffer := new(bytes.Buffer)
+	io.Copy(xargsBuffer, xargsOut)
 
-	debug("batsout: %s", batsout.String())
+	debug("xargsOut: %s", xargsBuffer.String())
 
-	bs := bytes.NewReader(batsout.Bytes())
+	bs := bytes.NewReader(xargsBuffer.Bytes())
 
 	parser, err := tap.NewParser(bs)
 	CheckErr(err)
