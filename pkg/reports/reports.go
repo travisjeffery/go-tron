@@ -58,7 +58,7 @@ func (r *Reports) record() {
 	os.Chdir(r.Dir)
 	cmd.New("git pull --rebase").Exec()
 
-	successes, failures := r.Run()
+	successes, failures, _ := r.Run()
 	failuresCount := len(failures)
 	totalCount := len(successes) + failuresCount
 
@@ -92,7 +92,7 @@ func (r *Reports) record() {
 	cmd.New("git commit -m").WithArg(summary).Exec()
 }
 
-func (r *Reports) Run() (successes []string, failures []string) {
+func (r *Reports) Run() (successes []string, failures []string, output *bytes.Buffer) {
 	debug("run")
 
 	execPath, err := osext.Executable()
@@ -111,12 +111,10 @@ func (r *Reports) Run() (successes []string, failures []string) {
 
 	xargs.Cmd.Start()
 
-	xargsBuffer := new(bytes.Buffer)
-	io.Copy(xargsBuffer, xargsOut)
+	output = new(bytes.Buffer)
+	io.Copy(output, xargsOut)
 
-	debug("xargsOut: %s", xargsBuffer.String())
-
-	bs := bytes.NewReader(xargsBuffer.Bytes())
+	bs := bytes.NewReader(output.Bytes())
 
 	parser, err := tap.NewParser(bs)
 	CheckErr(err)

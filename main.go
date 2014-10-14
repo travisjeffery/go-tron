@@ -3,7 +3,7 @@ package main
 import "os"
 import "github.com/codegangsta/cli"
 import "github.com/travisjeffery/tron/pkg/reports"
-import "github.com/travisjeffery/tron/pkg/cmd"
+import "fmt"
 
 func main() {
 	app := cli.NewApp()
@@ -27,10 +27,8 @@ func addCommands(app *cli.App) {
 			Name:  "run",
 			Usage: "Runs checklists",
 			Action: func(c *cli.Context) {
-				cmd.Stdout = nil
-				cmd.Stderr = nil
-				cmd.Stdin = nil
-				r.Run()
+				_, _, output := r.Run()
+				fmt.Println(output.String())
 			},
 		},
 		{
