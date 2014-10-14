@@ -6,10 +6,15 @@ import "strings"
 import "github.com/kballard/go-shellquote"
 import "log"
 import "os"
+import "io"
+import . "github.com/visionmedia/go-debug"
+
+var debug = Debug("cmd")
 
 type Cmd struct {
 	Name string
 	Args []string
+	Cmd  *exec.Cmd
 }
 
 func (cmd Cmd) String() string {
@@ -31,37 +36,43 @@ func (cmd *Cmd) WithArgs(args ...string) *Cmd {
 }
 
 func (cmd *Cmd) ExecOutput() (string, error) {
-	output, err := exec.Command(cmd.Name, cmd.Args...).CombinedOutput()
+	output, err := cmd.Cmd.CombinedOutput()
 	return string(output), err
 }
 
 func (cmd *Cmd) Exec() error {
-	binary, lookErr := exec.LookPath(cmd.Name)
-	if lookErr != nil {
-		return fmt.Errorf("command not found: %s", cmd.Name)
-	}
-	c := exec.Command(binary, cmd.Args...)
-	c.Stdin = Stdin
-	c.Stderr = Stderr
-	c.Stdout = Stdout
-	return c.Run()
+	return cmd.Cmd.Run()
 }
 
 func New(cmd string) *Cmd {
 	cmds, err := shellquote.Split(cmd)
+
 	if err != nil {
-		log.Fatalf("fatal: %v\n", err)
+		log.Fatal(err)
 	}
-	name := cmds[0]
-	args := make([]string, 0)
-	for _, arg := range cmds[1:] {
-		args = append(args, arg)
-	}
-	return &Cmd{Name: name, Args: args}
+
+	return NewWithArray(cmds)
+}
+
+func (cmd *Cmd) StdinPipe() (io.WriteCloser, error) {
+	return cmd.Cmd.StdinPipe()
 }
 
 func NewWithArray(cmd []string) *Cmd {
-	return &Cmd{Name: cmd[0], Args: cmd[1:]}
+	name := cmd[0]
+
+	binary, _ := exec.LookPath(name)
+
+	args := make([]string, 0)
+	for _, arg := range cmd[1:] {
+		args = append(args, arg)
+	}
+
+	debug("exec.Command(%s, %s)", binary, args)
+
+	c := exec.Command(binary, args...)
+
+	return &Cmd{Name: name, Args: args, Cmd: c}
 }
 
 var Stdout = os.Stdout
